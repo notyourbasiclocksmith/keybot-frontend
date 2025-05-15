@@ -80,8 +80,9 @@ const FileList: React.FC<FileListProps> = ({ files, onDelete, downloadEnabled = 
                   variant="outline"
                   size="sm"
                   onClick={() => window.open(file.url, '_blank')}
-                  title="Download file"
+                  className="relative group"
                 >
+                  <span className="sr-only">Download file</span>
                   <FaDownload className="text-gray-600" />
                 </Button>
               )}
@@ -91,9 +92,9 @@ const FileList: React.FC<FileListProps> = ({ files, onDelete, downloadEnabled = 
                   variant="outline"
                   size="sm"
                   onClick={() => onDelete(file.id)}
-                  title="Delete file"
-                  className="text-red-600 hover:text-red-800 hover:border-red-300"
+                  className="text-red-600 hover:text-red-800 hover:border-red-300 relative group"
                 >
+                  <span className="sr-only">Delete file</span>
                   <FaTrash />
                 </Button>
               )}
