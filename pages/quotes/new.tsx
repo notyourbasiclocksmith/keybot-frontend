@@ -84,10 +84,8 @@ const NewQuote = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center">
-        <Link href="/quotes">
-          <a className="flex items-center text-blue-600 hover:text-blue-800">
-            <FaArrowLeft className="mr-2" /> Back to Quotes
-          </a>
+        <Link href="/quotes" className="flex items-center text-blue-600 hover:text-blue-800">
+          <FaArrowLeft className="mr-2" /> Back to Quotes
         </Link>
       </div>
       

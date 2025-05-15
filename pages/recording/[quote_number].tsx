@@ -189,6 +189,8 @@ export default function RecordingPage() {
                     href={`https://keybot-recordings.nyc3.digitaloceanspaces.com/${quote_number}.mp3`} 
                     download 
                     className="text-blue-600 hover:underline mx-1"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     DigitalOcean Spaces
                   </a>

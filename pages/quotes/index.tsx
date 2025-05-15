@@ -48,14 +48,28 @@ export default function QuotesPage() {
       setLoading(true);
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE}/quotes`);
       
-      if (response.data && response.data.success) {
-        setQuotes(response.data.data || []);
+      // Log the response to help debug the structure
+      console.log('API Response:', response.data);
+      
+      // Handle different possible response structures
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        // Standard success structure
+        setQuotes(response.data.data);
+      } else if (Array.isArray(response.data)) {
+        // Direct array response
+        setQuotes(response.data);
+      } else if (response.data && typeof response.data === 'object') {
+        // Handle case where data might be nested differently
+        const possibleData = response.data.data || response.data.quotes || response.data.results || [];
+        setQuotes(Array.isArray(possibleData) ? possibleData : []);
       } else {
-        throw new Error(response.data?.message || 'Failed to fetch quotes');
+        // Fallback
+        setQuotes([]);
+        throw new Error('Unexpected response format');
       }
     } catch (error) {
       console.error('Error fetching quotes:', error);
-      toast.error('Failed to load quotes');
+      toast.error('Failed to load quotes. Please check if the API server is running.');
     } finally {
       setLoading(false);
     }

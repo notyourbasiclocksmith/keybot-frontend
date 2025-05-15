@@ -7,7 +7,11 @@ import {
   FaFileUpload, 
   FaCalendarAlt, 
   FaInfoCircle, 
-  FaPlus 
+  FaPlus,
+  FaCog,
+  FaUsers,
+  FaPhoneAlt,
+  FaRobot
 } from 'react-icons/fa';
 
 interface LayoutProps {
@@ -28,8 +32,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navLinks = [
     { path: '/', label: 'Dashboard', icon: <FaHome className="mr-2" /> },
     { path: '/quotes', label: 'Quotes', icon: <FaClipboard className="mr-2" /> },
-    { path: '/upload', label: 'Upload Pricing', icon: <FaFileUpload className="mr-2" /> },
+    { path: '/customers', label: 'Customers', icon: <FaUsers className="mr-2" /> },
     { path: '/calendar', label: 'Calendar', icon: <FaCalendarAlt className="mr-2" /> },
+    { path: '/upload', label: 'Upload Pricing', icon: <FaFileUpload className="mr-2" /> },
+    { path: '/receptionist', label: 'Receptionist', icon: <FaPhoneAlt className="mr-2" /> },
+    { path: '/settings', label: 'Settings', icon: <FaCog className="mr-2" /> },
     { path: '/about', label: 'About', icon: <FaInfoCircle className="mr-2" /> },
   ];
 
@@ -44,30 +51,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
             <nav className="mt-5 flex-1 px-2">
               {navLinks.map((link) => (
-                <Link href={link.path} key={link.path}>
-                  <a
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                      isActive(link.path)
-                        ? 'bg-blue-800 text-white'
-                        : 'text-blue-100 hover:bg-blue-600 hover:text-white'
-                    }`}
-                  >
-                    {link.icon}
-                    {link.label}
-                  </a>
+                <Link 
+                  href={link.path} 
+                  key={link.path}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    isActive(link.path)
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-600 hover:text-white'
+                  }`}
+                >
+                  {link.icon}
+                  {link.label}
                 </Link>
               ))}
               
               {/* Special Create Quote Button */}
-              <Link href="/quotes/new">
-                <a className={`group flex items-center px-2 py-2 mt-4 text-sm font-medium rounded-md ${
+              <Link 
+                href="/quotes/new"
+                className={`group flex items-center px-2 py-2 mt-4 text-sm font-medium rounded-md ${
                   router.pathname === '/quotes/new'
                     ? 'bg-green-700 text-white'
                     : 'bg-green-600 text-white hover:bg-green-700'
-                }`}>
-                  <FaPlus className="mr-2" />
-                  Create New Quote
-                </a>
+                }`}
+              >
+                <FaPlus className="mr-2" />
+                Create New Quote
               </Link>
             </nav>
           </div>
@@ -98,32 +106,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Mobile menu */}
         <div id="mobile-menu" className="hidden p-2 pb-3 space-y-1">
           {navLinks.map((link) => (
-            <Link href={link.path} key={link.path}>
-              <a
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive(link.path)
-                    ? 'bg-blue-800 text-white'
-                    : 'text-blue-100 hover:bg-blue-600 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center">
-                  {link.icon}
-                  {link.label}
-                </div>
-              </a>
+            <Link 
+              href={link.path} 
+              key={link.path}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive(link.path)
+                  ? 'bg-blue-800 text-white'
+                  : 'text-blue-100 hover:bg-blue-600 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center">
+                {link.icon}
+                {link.label}
+              </div>
             </Link>
           ))}
-          <Link href="/quotes/new">
-            <a className={`block px-3 py-2 rounded-md text-base font-medium mt-2 ${
+          <Link 
+            href="/quotes/new"
+            className={`block px-3 py-2 rounded-md text-base font-medium mt-2 ${
               router.pathname === '/quotes/new'
                 ? 'bg-green-700 text-white'
                 : 'bg-green-600 text-white hover:bg-green-700'
-            }`}>
-              <div className="flex items-center">
-                <FaPlus className="mr-2" />
-                Create New Quote
-              </div>
-            </a>
+            }`}
+          >
+            <div className="flex items-center">
+              <FaPlus className="mr-2" />
+              Create New Quote
+            </div>
           </Link>
         </div>
       </div>
