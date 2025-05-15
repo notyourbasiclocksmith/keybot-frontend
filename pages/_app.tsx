@@ -1,8 +1,9 @@
 import '../styles/globals.css';
 import React from 'react';
 import type { AppProps } from 'next/app';
-import Layout from '../components/Layout';
 import { Toaster } from 'react-hot-toast';
+import Layout from '../components/ui/Layout';
+import { LayoutProvider } from '../components/ui/LayoutContext';
 
 type NextPageWithLayout = AppProps & {
   Component: AppProps['Component'] & {
@@ -17,9 +18,11 @@ function MyApp({ Component, pageProps }: NextPageWithLayout) {
   return (
     <>
       <Toaster position="top-right" />
-      <Layout>
-        {getLayout(<Component {...pageProps} />)}
-      </Layout>
+      <LayoutProvider>
+        <Layout>
+          {getLayout(<Component {...pageProps} />)}
+        </Layout>
+      </LayoutProvider>
     </>
   );
 }
