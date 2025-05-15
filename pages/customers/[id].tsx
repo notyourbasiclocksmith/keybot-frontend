@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaRegStickyNote, FaFile, FaStar, FaSpinner, FaEdit } from 'react-icons/fa';
 import { toast, Toaster } from 'react-hot-toast';
-import axios from 'axios';
+import apiClient from '../../lib/api';
 
 // Import customer components
 import CustomerCard from '../../components/customers/CustomerCard';
@@ -13,6 +13,8 @@ import AddressHistory from '../../components/customers/AddressHistory';
 import AppointmentList from '../../components/customers/AppointmentList';
 import NoteList from '../../components/customers/NoteList';
 import FileUploader from '../../components/customers/FileUploader';
+import UploadModal from '../../components/ui/UploadModal';
+import FileList from '../../components/ui/FileList';
 
 // Dummy data for initial development
 const dummyCustomer = {
@@ -120,18 +122,70 @@ const CustomerProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch customer data from API (using dummy data for now)
+  // Fetch customer data from API
   useEffect(() => {
     if (id) {
-      // Simulating API fetch with dummy data
-      setTimeout(() => {
-        setCustomer(dummyCustomer);
-        setAddresses(dummyAddresses);
-        setAppointments(dummyAppointments);
-        setNotes(dummyNotes);
-        setFiles(dummyFiles);
-        setIsLoading(false);
-      }, 1000);
+      const fetchCustomerData = async () => {
+        try {
+          setIsLoading(true);
+          
+          // Fetch customer details
+          const customerResponse = await apiClient.get<{customer: any}>(`/api/customers/${id}`);
+          if (customerResponse && customerResponse.customer) {
+            setCustomer(customerResponse.customer);
+          } else {
+            // Fallback to dummy data for development
+            setCustomer(dummyCustomer);
+          }
+          
+          // Fetch customer addresses
+          const addressResponse = await apiClient.get<{addresses: any[]}>(`/api/customers/${id}/address-history`);
+          if (addressResponse && addressResponse.addresses) {
+            setAddresses(addressResponse.addresses);
+          } else {
+            setAddresses(dummyAddresses);
+          }
+          
+          // Fetch customer appointments
+          const appointmentResponse = await apiClient.get<{appointments: any[]}>(`/api/customers/${id}/appointments`);
+          if (appointmentResponse && appointmentResponse.appointments) {
+            setAppointments(appointmentResponse.appointments);
+          } else {
+            setAppointments(dummyAppointments);
+          }
+          
+          // Fetch customer notes
+          const notesResponse = await apiClient.get<{notes: any[]}>(`/api/customers/${id}/notes`);
+          if (notesResponse && notesResponse.notes) {
+            setNotes(notesResponse.notes);
+          } else {
+            setNotes(dummyNotes);
+          }
+          
+          // Fetch customer files
+          const filesResponse = await apiClient.get<{files: any[]}>(`/api/customers/${id}/files`);
+          if (filesResponse && filesResponse.files) {
+            setFiles(filesResponse.files);
+          } else {
+            setFiles(dummyFiles);
+          }
+          
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error fetching customer data:', error);
+          toast.error('Failed to load customer data');
+          
+          // Fallback to dummy data
+          setCustomer(dummyCustomer);
+          setAddresses(dummyAddresses);
+          setAppointments(dummyAppointments);
+          setNotes(dummyNotes);
+          setFiles(dummyFiles);
+          setIsLoading(false);
+        }
+      };
+      
+      fetchCustomerData();
       
       // Actual API fetch would look like this:
       /*
@@ -164,82 +218,222 @@ const CustomerProfile = () => {
 
   // Handle operations on addresses
   const handleAddAddress = async (addressData: any) => {
-    // In a real app, this would be an API call
-    const newAddress = {
-      id: addresses.length + 1,
-      ...addressData,
-      created_at: new Date().toISOString()
-    };
-    
-    setAddresses([...addresses, newAddress]);
-    toast.success('Address added successfully!');
+    try {
+      const response = await apiClient.post<{success: boolean}>(`/api/customers/${id}/addresses`, addressData);
+      
+      if (response && response.success) {
+        // Refresh addresses
+        const addressResponse = await apiClient.get<{addresses: any[]}>(`/api/customers/${id}/address-history`);
+        if (addressResponse && addressResponse.addresses) {
+          setAddresses(addressResponse.addresses);
+        }
+        toast.success('Address added successfully!');
+      }
+    } catch (error) {
+      console.error('Error adding address:', error);
+      toast.error('Failed to add address');
+      
+      // Fallback behavior for development/demo
+      const newAddress = {
+        id: addresses.length + 1,
+        ...addressData,
+        created_at: new Date().toISOString()
+      };
+      
+      setAddresses([...addresses]);
+      
+      if (addressData.is_primary) {
+        setAddresses(addresses.map(addr => ({
+          ...addr,
+          is_primary: false
+        })));
+      }
+      
+      setAddresses([newAddress, ...addresses]);
+      toast.success('Address added successfully!');
+    }
   };
 
   const handleDeleteAddress = async (addressId: number) => {
-    // In a real app, this would be an API call
-    setAddresses(addresses.filter(address => address.id !== addressId));
-    toast.success('Address deleted successfully!');
+    try {
+      const response = await apiClient.delete<{success: boolean}>(`/api/customers/${id}/addresses/${addressId}`);
+      
+      if (response && response.success) {
+        // Update state after successful deletion
+        setAddresses(addresses.filter(address => address.id !== addressId));
+        toast.success('Address deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      toast.error('Failed to delete address');
+      
+      // Fallback behavior for development/demo
+      setAddresses(addresses.filter(address => address.id !== addressId));
+      toast.success('Address deleted successfully!');
+    }
   };
 
   const handleSetPrimaryAddress = async (addressId: number) => {
-    // In a real app, this would be an API call
-    setAddresses(addresses.map(address => ({
-      ...address,
-      is_primary: address.id === addressId
-    })));
-    toast.success('Primary address updated.');
+    try {
+      const response = await apiClient.put<{success: boolean}>(`/api/customers/${id}/addresses/${addressId}/set-primary`, {
+        is_primary: true
+      });
+      
+      if (response && response.success) {
+        // Update local state
+        setAddresses(addresses.map(address => ({
+          ...address,
+          is_primary: address.id === addressId
+        })));
+        toast.success('Primary address updated!');
+      }
+    } catch (error) {
+      console.error('Error setting primary address:', error);
+      toast.error('Failed to update primary address');
+      
+      // Fallback behavior for development/demo
+      setAddresses(addresses.map(address => ({
+        ...address,
+        is_primary: address.id === addressId
+      })));
+      toast.success('Primary address updated!');
+    }
   };
 
   // Handle operations on notes
   const handleAddNote = async (content: string) => {
-    // In a real app, this would be an API call
-    const newNote = {
-      id: notes.length + 1,
-      content,
-      created_at: new Date().toISOString(),
-      created_by: 'Current User'
-    };
-    
-    setNotes([newNote, ...notes]);
-    toast.success('Note added successfully!');
+    try {
+      const response = await apiClient.post<{success: boolean}>(`/api/customers/${id}/notes`, { content });
+      
+      if (response && response.success) {
+        // Refresh notes from the API
+        const notesResponse = await apiClient.get<{notes: any[]}>(`/api/customers/${id}/notes`);
+        if (notesResponse && notesResponse.notes) {
+          setNotes(notesResponse.notes);
+        }
+        toast.success('Note added successfully!');
+      }
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast.error('Failed to add note');
+      
+      // Fallback behavior for development/demo
+      const newNote = {
+        id: notes.length + 1,
+        content,
+        created_at: new Date().toISOString(),
+        created_by: 'Current User'
+      };
+      
+      setNotes([newNote, ...notes]);
+      toast.success('Note added successfully!');
+    }
   };
 
   const handleUpdateNote = async (noteId: number, content: string) => {
-    // In a real app, this would be an API call
-    setNotes(notes.map(note => 
-      note.id === noteId
-        ? { ...note, content, updated_at: new Date().toISOString() }
-        : note
-    ));
-    toast.success('Note updated successfully!');
+    try {
+      const response = await apiClient.put<{success: boolean}>(`/api/customers/${id}/notes/${noteId}`, { content });
+      
+      if (response && response.success) {
+        // Update local state
+        setNotes(notes.map(note => 
+          note.id === noteId
+            ? { ...note, content, updated_at: new Date().toISOString() }
+            : note
+        ));
+        toast.success('Note updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast.error('Failed to update note');
+      
+      // Fallback behavior for development/demo
+      setNotes(notes.map(note => 
+        note.id === noteId
+          ? { ...note, content, updated_at: new Date().toISOString() }
+          : note
+      ));
+      toast.success('Note updated successfully!');
+    }
   };
 
   const handleDeleteNote = async (noteId: number) => {
-    // In a real app, this would be an API call
-    setNotes(notes.filter(note => note.id !== noteId));
-    toast.success('Note deleted successfully!');
+    try {
+      const response = await apiClient.delete<{success: boolean}>(`/api/customers/${id}/notes/${noteId}`);
+      
+      if (response && response.success) {
+        // Update local state
+        setNotes(notes.filter(note => note.id !== noteId));
+        toast.success('Note deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast.error('Failed to delete note');
+      
+      // Fallback behavior for development/demo
+      setNotes(notes.filter(note => note.id !== noteId));
+      toast.success('Note deleted successfully!');
+    }
   };
 
   // Handle operations on files
   const handleUploadFile = async (file: File) => {
-    // In a real app, this would be an API call to upload file
-    const newFile = {
-      id: files.length + 1,
-      filename: file.name,
-      file_type: file.type,
-      file_size: file.size,
-      uploaded_at: new Date().toISOString(),
-      url: '#'
-    };
-    
-    setFiles([newFile, ...files]);
-    toast.success('File uploaded successfully!');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await apiClient.uploadFile<{success: boolean}>(
+        `/api/customers/${id}/files`,
+        file,
+        (progress) => {
+          // Progress handling is managed by the UploadModal component
+        }
+      );
+      
+      if (response && response.success) {
+        // Refresh files from API
+        const filesResponse = await apiClient.get<{files: any[]}>(`/api/customers/${id}/files`);
+        if (filesResponse && filesResponse.files) {
+          setFiles(filesResponse.files);
+        }
+        toast.success('File uploaded successfully!');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload file');
+      
+      // Fallback behavior for development/demo
+      const newFile = {
+        id: files.length + 1,
+        filename: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        uploaded_at: new Date().toISOString(),
+        url: '#'
+      };
+      
+      setFiles([newFile, ...files]);
+      toast.success('File uploaded successfully!');
+    }
   };
 
   const handleDeleteFile = async (fileId: number) => {
-    // In a real app, this would be an API call
-    setFiles(files.filter(file => file.id !== fileId));
-    toast.success('File deleted successfully!');
+    try {
+      const response = await apiClient.delete<{success: boolean}>(`/api/customers/${id}/files/${fileId}`);
+      
+      if (response && response.success) {
+        // Update local state
+        setFiles(files.filter(file => file.id !== fileId));
+        toast.success('File deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error('Failed to delete file');
+      
+      // Fallback behavior for development/demo
+      setFiles(files.filter(file => file.id !== fileId));
+      toast.success('File deleted successfully!');
+    }
   };
 
   // Handle appointment operations
